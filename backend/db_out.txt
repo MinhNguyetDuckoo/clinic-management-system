@@ -1,0 +1,154 @@
+--- Medicines Table Columns ---
+[
+  {
+    "COLUMN_NAME": "MedicineId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "COLUMN_NAME": "CategoryId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "COLUMN_NAME": "MedicineName",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "COLUMN_NAME": "Unit",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "COLUMN_NAME": "Price",
+    "DATA_TYPE": "decimal"
+  },
+  {
+    "COLUMN_NAME": "StockQuantity",
+    "DATA_TYPE": "int"
+  },
+  {
+    "COLUMN_NAME": "MinStockQuantity",
+    "DATA_TYPE": "int"
+  },
+  {
+    "COLUMN_NAME": "IsActive",
+    "DATA_TYPE": "bit"
+  },
+  {
+    "COLUMN_NAME": "IsDeleted",
+    "DATA_TYPE": "bit"
+  },
+  {
+    "COLUMN_NAME": "CreatedAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "COLUMN_NAME": "UpdatedAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "COLUMN_NAME": "RowVersion",
+    "DATA_TYPE": "timestamp"
+  }
+]
+--- sp_CreatePrescription ---
+
+/* =========================================================
+   005_prescription_pharmacy_procedures.sql
+   Stored Procedure cho đơn thuốc và cấp thuốc
+   ========================================================= */
+
+
+/* =========================================================
+   1. Tạo đơn thuốc
+   - Một phiếu khám có thể có 1 đơn thuốc chính
+   - Cho phép tạo khi phiếu khám InProgress hoặc Completed
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_CreatePrescription
+    @ExaminationId INT,
+    @DoctorId INT,
+    @Note NVARCHAR(1000) = NULL,
+    @CreatedBy INT = NULL,
+    @NewPrescriptionId INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Examinations WITH (UPDLOCK, HOLDLOCK)
+            WHERE ExaminationId = @ExaminationId
+              AND Status IN ('InProgress', 'Completed')
+        )
+        BEGIN
+            THROW 50401, N'Phiếu khám không tồn tại hoặc chưa thể kê đơn.', 1;
+        END;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Doctors
+            WHERE DoctorId = @DoctorId
+              AND IsActive = 1
+        )
+        BEGIN
+            THROW 50402, N'Bác sĩ không tồn tại hoặc đã ngưng hoạt động.', 1;
+        END;
+
+        IF EXISTS (
+            SELECT 1
+            FROM Prescriptions WITH (UPDLOCK, HOLDLOCK)
+            WHERE ExaminationId = @ExaminationId
+              AND Status <> 'Cancelled'
+        )
+        BEGIN
+            THROW 50403, N'Phiếu khám này đã có đơn thuốc.', 1;
+        END;
+
+        INSERT INTO Prescriptions
+        (
+            ExaminationId,
+            DoctorId,
+            Status,
+            Note
+        )
+        VALUES
+        (
+            @ExaminationId,
+            @DoctorId,
+            'Pending',
+            @Note
+        );
+
+        SET @NewPrescriptionId = SCOPE_IDENTITY();
+
+        INSERT INTO AuditLogs
+        (
+            UserId,
+            Action,
+            TableName,
+            RecordId,
+            NewData
+        )
+        VALUES
+        (
+            @CreatedBy,
+            'CREATE_PRESCRIPTION',
+            'Prescriptions',
+            @NewPrescriptionId,
+            CONCAT(N'Created prescription id: ', @NewPrescriptionId)
+        );
+
+        COMMIT TRANSACTION;
+
+        SELECT @NewPrescriptionId AS PrescriptionId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH
+END;
+

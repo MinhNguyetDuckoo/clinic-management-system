@@ -1,0 +1,21 @@
+--- vw_Manager_RevenueByDay ---
+[
+  {
+    "RevenueDate": "2026-04-30T00:00:00.000Z",
+    "TotalPaidInvoices": 2,
+    "TotalRevenue": 439000
+  }
+]
+--- vw_Manager_MedicineStockStatus ---
+[
+  {
+    "MedicineId": 1,
+    "MedicineName": "Paracetamol 500mg",
+    "Unit": "Viên",
+    "StockQuantity": 980,
+    "MinStockQuantity": 100,
+    "Price": 1000,
+    "CategoryName": "Giảm đau",
+    "StockStatus": "Normal"
+  }
+]

@@ -1,0 +1,716 @@
+--- Table Columns ---
+[
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "InvoiceDetailId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "InvoiceId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "ItemType",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "ItemId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "Description",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "Quantity",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "UnitPrice",
+    "DATA_TYPE": "decimal"
+  },
+  {
+    "TABLE_NAME": "InvoiceDetails",
+    "COLUMN_NAME": "Amount",
+    "DATA_TYPE": "decimal"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "InvoiceId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "PatientId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "ExaminationId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "TotalAmount",
+    "DATA_TYPE": "decimal"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "Status",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "CreatedBy",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "CreatedAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "PaidAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "TABLE_NAME": "Invoices",
+    "COLUMN_NAME": "RowVersion",
+    "DATA_TYPE": "timestamp"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "PaymentId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "InvoiceId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "Amount",
+    "DATA_TYPE": "decimal"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "PaymentMethod",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "PaidBy",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "PaidAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "TABLE_NAME": "Payments",
+    "COLUMN_NAME": "Note",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "ServiceOrderId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "ExaminationId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "ServiceId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "Quantity",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "Status",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "Result",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "OrderedAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "TABLE_NAME": "ServiceOrders",
+    "COLUMN_NAME": "CompletedAt",
+    "DATA_TYPE": "datetime2"
+  },
+  {
+    "TABLE_NAME": "Services",
+    "COLUMN_NAME": "ServiceId",
+    "DATA_TYPE": "int"
+  },
+  {
+    "TABLE_NAME": "Services",
+    "COLUMN_NAME": "ServiceName",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "Services",
+    "COLUMN_NAME": "ServiceType",
+    "DATA_TYPE": "nvarchar"
+  },
+  {
+    "TABLE_NAME": "Services",
+    "COLUMN_NAME": "Price",
+    "DATA_TYPE": "decimal"
+  },
+  {
+    "TABLE_NAME": "Services",
+    "COLUMN_NAME": "IsActive",
+    "DATA_TYPE": "bit"
+  },
+  {
+    "TABLE_NAME": "Services",
+    "COLUMN_NAME": "CreatedAt",
+    "DATA_TYPE": "datetime2"
+  }
+]
+
+--- sp_CreateInvoice ---
+
+/* =========================================================
+   006_invoice_payment_procedures.sql
+   Stored Procedure cho hóa đơn và thanh toán
+   ========================================================= */
+
+
+/* =========================================================
+   1. Tạo hóa đơn cho một lần khám
+   - Nếu đã có invoice active cho ExaminationId thì không tạo trùng
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_CreateInvoice
+    @PatientId INT,
+    @ExaminationId INT = NULL,
+    @CreatedBy INT = NULL,
+    @NewInvoiceId INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Patients
+            WHERE PatientId = @PatientId
+              AND IsDeleted = 0
+        )
+        BEGIN
+            THROW 50501, N'Bệnh nhân không tồn tại.', 1;
+        END;
+
+        IF @ExaminationId IS NOT NULL
+           AND NOT EXISTS (
+                SELECT 1
+                FROM Examinations
+                WHERE ExaminationId = @ExaminationId
+           )
+        BEGIN
+            THROW 50502, N'Phiếu khám không tồn tại.', 1;
+        END;
+
+        IF @ExaminationId IS NOT NULL
+           AND EXISTS (
+                SELECT 1
+                FROM Invoices WITH (UPDLOCK, HOLDLOCK)
+                WHERE ExaminationId = @ExaminationId
+                  AND Status <> 'Cancelled'
+           )
+        BEGIN
+            THROW 50503, N'Phiếu khám này đã có hóa đơn.', 1;
+        END;
+
+        INSERT INTO Invoices
+        (
+            PatientId,
+            ExaminationId,
+            TotalAmount,
+            Status,
+            CreatedBy
+        )
+        VALUES
+        (
+            @PatientId,
+            @ExaminationId,
+            0,
+            'Unpaid',
+            @CreatedBy
+        );
+
+        SET @NewInvoiceId = SCOPE_IDENTITY();
+
+        INSERT INTO AuditLogs
+        (
+            UserId,
+            Action,
+            TableName,
+            RecordId,
+            NewData
+        )
+        VALUES
+        (
+            @CreatedBy,
+            'CREATE_INVOICE',
+            'Invoices',
+            @NewInvoiceId,
+            CONCAT(N'Created invoice id: ', @NewInvoiceId)
+        );
+
+        COMMIT TRANSACTION;
+
+        SELECT @NewInvoiceId AS InvoiceId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH
+END;
+
+--- sp_CreateInvoiceFromExamination ---
+
+
+/* =========================================================
+   3. Tạo hóa đơn tự động từ Examination
+   Bao gồm:
+   - Phí khám bác sĩ
+   - Dịch vụ đã hoàn tất
+   - Thuốc trong đơn thuốc nếu đã có
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_CreateInvoiceFromExamination
+    @ExaminationId INT,
+    @CreatedBy INT = NULL,
+    @NewInvoiceId INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DECLARE @PatientId INT;
+        DECLARE @DoctorId INT;
+        DECLARE @ConsultationFee DECIMAL(18,2);
+
+        SELECT
+            @PatientId = a.PatientId,
+            @DoctorId = ex.DoctorId,
+            @ConsultationFee = d.ConsultationFee
+        FROM Examinations ex
+        INNER JOIN Appointments a
+            ON ex.AppointmentId = a.AppointmentId
+        INNER JOIN Doctors d
+            ON ex.DoctorId = d.DoctorId
+        WHERE ex.ExaminationId = @ExaminationId;
+
+        IF @PatientId IS NULL
+        BEGIN
+            THROW 50508, N'Phiếu khám không tồn tại.', 1;
+        END;
+
+        IF EXISTS (
+            SELECT 1
+            FROM Invoices WITH (UPDLOCK, HOLDLOCK)
+            WHERE ExaminationId = @ExaminationId
+              AND Status <> 'Cancelled'
+        )
+        BEGIN
+            THROW 50509, N'Phiếu khám này đã có hóa đơn.', 1;
+        END;
+
+        INSERT INTO Invoices
+        (
+            PatientId,
+            ExaminationId,
+            TotalAmount,
+            Status,
+            CreatedBy
+        )
+        VALUES
+        (
+            @PatientId,
+            @ExaminationId,
+            0,
+            'Unpaid',
+            @CreatedBy
+        );
+
+        SET @NewInvoiceId = SCOPE_IDENTITY();
+
+        /* 1. Phí khám */
+        INSERT INTO InvoiceDetails
+        (
+            InvoiceId,
+            ItemType,
+            ItemId,
+            Description,
+            Quantity,
+            UnitPrice
+        )
+        VALUES
+        (
+            @NewInvoiceId,
+            'Consultation',
+            @DoctorId,
+            N'Phí khám bác sĩ',
+            1,
+            ISNULL(@ConsultationFee, 0)
+        );
+
+        /* 2. Dịch vụ đã hoàn tất */
+        INSERT INTO InvoiceDetails
+        (
+            InvoiceId,
+            ItemType,
+            ItemId,
+            Description,
+            Quantity,
+            UnitPrice
+        )
+        SELECT
+            @NewInvoiceId,
+            'Service',
+            sv.ServiceId,
+            sv.ServiceName,
+            so.Quantity,
+            sv.Price
+        FROM ServiceOrders so
+        INNER JOIN Services sv
+            ON so.ServiceId = sv.ServiceId
+        WHERE so.ExaminationId = @ExaminationId
+          AND so.Status = 'Completed';
+
+        /* 3. Thuốc trong đơn thuốc */
+        INSERT INTO InvoiceDetails
+        (
+            InvoiceId,
+            ItemType,
+            ItemId,
+            Description,
+            Quantity,
+            UnitPrice
+        )
+        SELECT
+            @NewInvoiceId,
+            'Medicine',
+            m.MedicineId,
+            m.MedicineName,
+            pd.Quantity,
+            m.Price
+        FROM Prescriptions pr
+        INNER JOIN PrescriptionDetails pd
+            ON pr.PrescriptionId = pd.PrescriptionId
+        INNER JOIN Medicines m
+            ON pd.MedicineId = m.MedicineId
+        WHERE pr.ExaminationId = @ExaminationId
+          AND pr.Status IN ('Pending', 'Dispensed');
+
+        UPDATE Invoices
+        SET TotalAmount = dbo.fn_CalculateInvoiceTotal(@NewInvoiceId)
+        WHERE InvoiceId = @NewInvoiceId;
+
+        INSERT INTO AuditLogs
+        (
+            UserId,
+            Action,
+            TableName,
+            RecordId,
+            NewData
+        )
+        VALUES
+        (
+            @CreatedBy,
+            'CREATE_INVOICE_FROM_EXAMINATION',
+            'Invoices',
+        @NewInvoiceId,
+            CONCAT(N'Created invoice from examination id: ', @ExaminationId)
+        );
+
+        COMMIT TRANSACTION;
+
+        SELECT @NewInvoiceId AS InvoiceId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH
+END;
+
+--- sp_GetUnpaidInvoices ---
+
+
+/* =========================================================
+   5. Lấy danh sách hóa đơn chưa thanh toán
+   Dùng cho UI thu ngân
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_GetUnpaidInvoices
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT *
+    FROM vw_Cashier_UnpaidInvoices
+    ORDER BY CreatedAt DESC;
+END;
+
+--- sp_GetInvoiceDetail ---
+
+
+/* =========================================================
+   4. Lấy chi tiết hóa đơn
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_GetInvoiceDetail
+    @InvoiceId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        i.InvoiceId,
+        i.PatientId,
+        p.PatientCode,
+        p.FullName AS PatientName,
+        p.Phone AS PatientPhone,
+        i.ExaminationId,
+        i.TotalAmount,
+        i.Status,
+        i.CreatedAt,
+        i.PaidAt
+    FROM Invoices i
+    INNER JOIN Patients p
+        ON i.PatientId = p.PatientId
+    WHERE i.InvoiceId = @InvoiceId;
+
+    SELECT
+        InvoiceDetailId,
+        InvoiceId,
+        ItemType,
+        ItemId,
+        Description,
+        Quantity,
+        UnitPrice,
+        Amount
+    FROM InvoiceDetails
+    WHERE InvoiceId = @InvoiceId
+    ORDER BY InvoiceDetailId;
+
+    SELECT
+        PaymentId,
+        InvoiceId,
+        Amount,
+        PaymentMethod,
+        PaidBy,
+        PaidAt,
+        Note
+    FROM Payments
+    WHERE InvoiceId = @InvoiceId
+    ORDER BY PaidAt;
+END;
+
+--- sp_PayInvoice ---
+
+
+/* =========================================================
+   6. Thanh toán hóa đơn
+   Quan trọng:
+   - Ghi Payments
+   - Update Invoices.Status = Paid
+   - Cả hai cùng transaction
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_PayInvoice
+    @InvoiceId INT,
+    @Amount DECIMAL(18,2),
+    @PaymentMethod NVARCHAR(50),
+    @PaidBy INT = NULL,
+    @Note NVARCHAR(255) = NULL,
+    @NewPaymentId INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DECLARE @TotalAmount DECIMAL(18,2);
+        DECLARE @Status NVARCHAR(50);
+
+        SELECT
+            @TotalAmount = TotalAmount,
+            @Status = Status
+        FROM Invoices WITH (UPDLOCK, HOLDLOCK)
+        WHERE InvoiceId = @InvoiceId;
+
+        IF @TotalAmount IS NULL
+        BEGIN
+            THROW 50510, N'Hóa đơn không tồn tại.', 1;
+        END;
+
+        IF @Status <> 'Unpaid'
+        BEGIN
+            THROW 50511, N'Hóa đơn không còn ở trạng thái Unpaid.', 1;
+        END;
+
+        IF @Amount <= 0
+        BEGIN
+            THROW 50512, N'Số tiền thanh toán phải lớn hơn 0.', 1;
+        END;
+
+        IF @Amount <> @TotalAmount
+        BEGIN
+            THROW 50513, N'Số tiền thanh toán không khớp tổng hóa đơn.', 1;
+        END;
+
+        IF @PaymentMethod NOT IN ('Cash', 'Card', 'BankTransfer', 'EWallet')
+        BEGIN
+            THROW 50514, N'Phương thức thanh toán không hợp lệ.', 1;
+        END;
+
+        INSERT INTO Payments
+        (
+            InvoiceId,
+            Amount,
+            PaymentMethod,
+            PaidBy,
+            Note
+        )
+        VALUES
+        (
+            @InvoiceId,
+            @Amount,
+            @PaymentMethod,
+            @PaidBy,
+            @Note
+        );
+
+        SET @NewPaymentId = SCOPE_IDENTITY();
+
+        UPDATE Invoices
+        SET
+            Status = 'Paid',
+            PaidAt = SYSDATETIME()
+        WHERE InvoiceId = @InvoiceId;
+
+        INSERT INTO AuditLogs
+        (
+            UserId,
+            Action,
+            TableName,
+            RecordId,
+            NewData
+        )
+        VALUES
+        (
+            @PaidBy,
+            'PAY_INVOICE',
+            'Invoices',
+            @InvoiceId,
+            CONCAT(N'Paid invoice id: ', @InvoiceId, N', amount: ', @Amount)
+        );
+
+        COMMIT TRANSACTION;
+
+        SELECT @NewPaymentId AS PaymentId;
+
+        EXEC dbo.sp_GetInvoiceDetail @InvoiceId = @InvoiceId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH
+END;
+
+--- sp_CancelInvoice ---
+
+
+/* =========================================================
+   7. Hủy hóa đơn chưa thanh toán
+   ========================================================= */
+CREATE   PROCEDURE dbo.sp_CancelInvoice
+    @InvoiceId INT,
+    @CancelledBy INT = NULL,
+    @Reason NVARCHAR(255) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Invoices WITH (UPDLOCK, HOLDLOCK)
+            WHERE InvoiceId = @InvoiceId
+              AND Status = 'Unpaid'
+        )
+        BEGIN
+            THROW 50515, N'Hóa đơn không tồn tại hoặc không thể hủy.', 1;
+        END;
+
+        UPDATE Invoices
+        SET Status = 'Cancelled'
+        WHERE InvoiceId = @InvoiceId;
+
+        INSERT INTO AuditLogs
+        (
+            UserId,
+            Action,
+            TableName,
+            RecordId,
+            NewData
+        )
+        VALUES
+        (
+            @CancelledBy,
+            'CANCEL_INVOICE',
+            'Invoices',
+            @InvoiceId,
+            CONCAT(N'Cancelled invoice id: ', @InvoiceId, N'. Reason: ', ISNULL(@Reason, N''))
+        );
+
+        COMMIT TRANSACTION;
+
+        SELECT @InvoiceId AS InvoiceId, 'Cancelled' AS Status;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH
+END;

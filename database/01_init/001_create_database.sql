@@ -1,0 +1,15 @@
+USE master;
+GO
+
+IF DB_ID('ClinicManagementDB') IS NOT NULL
+BEGIN
+    ALTER DATABASE ClinicManagementDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE ClinicManagementDB;
+END
+GO
+
+CREATE DATABASE ClinicManagementDB;
+GO
+
+USE ClinicManagementDB;
+GO
