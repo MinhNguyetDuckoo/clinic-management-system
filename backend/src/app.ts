@@ -15,12 +15,14 @@ import doctorRoutes from "./modules/doctors/doctors.routes";
 import roomRoutes from "./modules/rooms/rooms.routes";
 import adminRoutes from "./modules/admin/admin.routes";
 import doctorScheduleRoutes from "./modules/doctor-schedules/doctorSchedules.routes";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (_req, res) => {
   res.json({

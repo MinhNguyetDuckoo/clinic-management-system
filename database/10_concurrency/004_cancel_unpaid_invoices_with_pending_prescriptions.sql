@@ -1,4 +1,4 @@
-USE ClinicManagementDB;
+﻿USE ClinicManagementDB;
 GO
 
 SET XACT_ABORT ON;

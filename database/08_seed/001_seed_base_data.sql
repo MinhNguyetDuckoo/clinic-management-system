@@ -1,4 +1,4 @@
-USE ClinicManagementDB;
+﻿USE ClinicManagementDB;
 GO
 
 INSERT INTO Roles (RoleName, Description)

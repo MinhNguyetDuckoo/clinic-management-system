@@ -1,4 +1,4 @@
-USE ClinicManagementDB;
+﻿USE ClinicManagementDB;
 GO
 
 SET QUOTED_IDENTIFIER ON;

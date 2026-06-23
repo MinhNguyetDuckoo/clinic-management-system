@@ -1,4 +1,4 @@
-USE ClinicManagementDB;
+﻿USE ClinicManagementDB;
 GO
 SET ANSI_NULLS ON;
 GO

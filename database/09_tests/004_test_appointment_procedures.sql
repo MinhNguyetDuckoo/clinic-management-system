@@ -1,4 +1,4 @@
-USE ClinicManagementDB;
+﻿USE ClinicManagementDB;
 GO
 
 DECLARE @Today DATE = CAST(GETDATE() AS DATE);

@@ -1,4 +1,4 @@
-USE ClinicManagementDB;
+﻿USE ClinicManagementDB;
 GO
 
 CREATE OR ALTER VIEW vw_PrescriptionDetails
