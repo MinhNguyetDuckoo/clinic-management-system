@@ -1,0 +1,101 @@
+flowchart LR
+  subgraph Auth["1. NHom Auth"]
+    U["Users"]
+    R["Roles"]
+    UR["UserRoles"]
+    LH["LoginHistories"]
+  end
+
+  subgraph People["2. NHom Nhan su & Benh nhan"]
+    P["Patients"]
+    E["Employees"]
+    D["Doctors"]
+    S["Specialties"]
+  end
+
+  subgraph Scheduling["3. NHom Lich hen"]
+    Ro["Rooms"]
+    DS["DoctorSchedules"]
+    A["Appointments"]
+  end
+
+  subgraph Medical["4. NHom Kham benh"]
+    MR["MedicalRecords"]
+    EX["Examinations"]
+    SV["Services"]
+    SO["ServiceOrders"]
+  end
+
+  subgraph Pharmacy["5. NHom Thuoc"]
+    MC["MedicineCategories"]
+    M["Medicines"]
+    PR["Prescriptions"]
+    PD["PrescriptionDetails"]
+    IT["InventoryTransactions"]
+  end
+
+  subgraph Invoice["6. NHom Hoa don"]
+    INV["Invoices"]
+    ID["InvoiceDetails"]
+    PAY["Payments"]
+  end
+
+  subgraph Audit["7. NHom Audit"]
+    AL["AuditLogs"]
+  end
+
+  U --> R
+  U --> UR
+  U --> LH
+  U --> E
+  U --> AL
+  U --> INV
+  U --> PAY
+  U --> PR
+  U --> IT
+  
+  R --> UR
+  
+  E --> D
+  D --> S
+  D --> DS
+  D --> A
+  D --> EX
+  D --> PR
+  
+  Ro --> DS
+  Ro --> A
+  DS --> D
+  
+  P --> MR
+  P --> A
+  P --> INV
+  
+  A --> EX
+  A --> INV
+  
+  MR --> EX
+  
+  EX --> SO
+  EX --> PR
+  EX --> INV
+  
+  SV --> SO
+  
+  MC --> M
+  M --> PD
+  M --> IT
+  
+  PR --> PD
+  
+  INV --> ID
+  INV --> PAY
+  
+  style U fill:#0369a1,color:#fff,stroke:#0369a1,stroke-width:3px
+  style Auth fill:#f0f9ff,stroke:#0ea5e9,stroke-width:2px
+  style People fill:#f0fdf4,stroke:#22c55e,stroke-width:2px
+  style Scheduling fill:#fffbeb,stroke:#f59e0b,stroke-width:2px
+  style Medical fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+  style Pharmacy fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px
+  style Invoice fill:#fecdd3,stroke:#f43f5e,stroke-width:2px
+  style Audit fill:#f3f4f6,stroke:#6b7280,stroke-width:2px

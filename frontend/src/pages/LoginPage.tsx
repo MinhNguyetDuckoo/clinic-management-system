@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Lock, User, Stethoscope } from "lucide-react";
+import { Activity, Lock, User, Stethoscope, Shield } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import { saveAuth } from "../utils/authStorage";
 
@@ -48,124 +48,116 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 relative overflow-hidden font-sans">
       
-      {/* Background generic floating blobs for overall page depth */}
-      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-sky-300/30 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '8s' }}></div>
-      <div className="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-emerald-300/30 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '12s' }}></div>
+      {/* Soft medical theme floating background blobs */}
+      <div className="absolute top-[-10%] left-[-5%] w-[800px] h-[800px] bg-sky-200/40 rounded-full blur-[100px] animate-blob"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[900px] h-[900px] bg-emerald-200/30 rounded-full blur-[120px] animate-blob" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-[30%] left-[30%] w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[80px] animate-blob" style={{ animationDelay: '4s' }}></div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] overflow-hidden z-10 border border-white/50">
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-white/70 backdrop-blur-3xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden z-10 border border-white animate-fade-in">
         
         {/* LEFT PANEL */}
-        <div className="relative hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-sky-600 to-emerald-500 text-white overflow-hidden">
-          {/* Subtle overlay texture or pattern could go here */}
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div className="relative hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-sky-50 to-blue-50/50 text-slate-800 overflow-hidden border-r border-slate-100/50">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] mix-blend-multiply"></div>
           
-          <div className="z-10">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/10">
-                <Stethoscope size={28} />
+          <div className="z-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 ring-4 ring-white">
+                <Stethoscope size={32} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">ClinicCare</h1>
-                <p className="text-sm text-sky-50 opacity-90">Quản lý phòng khám</p>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">ClinicCare</h1>
+                <p className="text-sm text-sky-600 font-bold uppercase tracking-widest mt-1">Chuẩn mực y tế</p>
               </div>
             </div>
 
-            <div className="mt-16">
-              <h2 className="text-4xl font-bold leading-tight">
-                Hệ thống quản lý phòng khám đa khoa
+            <div className="mt-20">
+              <h2 className="text-4xl font-bold leading-tight text-slate-900">
+                Chăm sóc sức khỏe <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-500">tận tâm & hiện đại</span>
               </h2>
-              <p className="mt-5 text-sky-50 leading-7 font-medium opacity-90">
-                Database-first với Stored Procedures, Views, Triggers và Audit Logs
+              <p className="mt-6 text-slate-600 leading-relaxed text-lg">
+                Hệ thống quản lý phòng khám toàn diện, tối ưu hóa trải nghiệm thăm khám cho bệnh nhân và nâng cao hiệu suất làm việc của y bác sĩ.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 text-center z-10">
-            <div className="rounded-2xl bg-white/15 backdrop-blur-sm p-4 border border-white/10">
-              <p className="text-2xl font-bold">6</p>
-              <p className="text-xs text-sky-50 uppercase tracking-wider font-semibold mt-1">Vai trò</p>
+          <div className="grid grid-cols-3 gap-4 text-center z-10 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+            <div className="rounded-2xl bg-white/60 backdrop-blur-md p-5 border border-white hover:bg-white transition-all duration-300 shadow-sm group">
+              <p className="text-3xl font-extrabold text-sky-600 group-hover:scale-110 transition-transform">6</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-2">Phân quyền</p>
             </div>
-            <div className="rounded-2xl bg-white/15 backdrop-blur-sm p-4 border border-white/10">
-              <p className="text-2xl font-bold">SQL</p>
-              <p className="text-xs text-sky-50 uppercase tracking-wider font-semibold mt-1">DB First</p>
+            <div className="rounded-2xl bg-white/60 backdrop-blur-md p-5 border border-white hover:bg-white transition-all duration-300 shadow-sm group">
+              <p className="text-3xl font-extrabold text-emerald-500 group-hover:scale-110 transition-transform">SQL</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-2">Bảo mật</p>
             </div>
-            <div className="rounded-2xl bg-white/15 backdrop-blur-sm p-4 border border-white/10">
-              <p className="text-2xl font-bold">SP</p>
-              <p className="text-xs text-sky-50 uppercase tracking-wider font-semibold mt-1">Procedures</p>
+            <div className="rounded-2xl bg-white/60 backdrop-blur-md p-5 border border-white hover:bg-white transition-all duration-300 shadow-sm group">
+              <p className="text-3xl font-extrabold text-blue-500 group-hover:scale-110 transition-transform">24/7</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-2">Sẵn sàng</p>
             </div>
           </div>
 
-          <Activity className="absolute right-8 bottom-32 opacity-10" size={160} />
-          
-          {/* Decorative gradients */}
-          <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-[-10%] right-[-20%] w-96 h-96 bg-black/10 rounded-full blur-3xl"></div>
+          <Activity className="absolute right-[-10%] bottom-[-5%] text-sky-100" size={300} strokeWidth={1} />
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="relative p-8 sm:p-12 flex flex-col justify-center min-h-[600px] overflow-hidden bg-white">
+        <div className="relative p-10 sm:p-14 flex flex-col justify-center min-h-[600px] overflow-hidden bg-white/80 backdrop-blur-xl">
           
-          {/* Enhanced Glow Blobs for right panel */}
-          <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-sky-400/20 rounded-full blur-[80px] pointer-events-none animate-pulse" style={{ animationDuration: '5s' }}></div>
-          <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-emerald-400/20 rounded-full blur-[80px] pointer-events-none animate-pulse" style={{ animationDuration: '7s' }}></div>
-          <div className="absolute top-[40%] left-[50%] w-72 h-72 bg-indigo-400/15 rounded-full blur-[70px] pointer-events-none animate-pulse" style={{ animationDuration: '9s', animationDelay: '1s' }}></div>
-
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="h-11 w-11 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center">
-              <Stethoscope size={24} />
+          <div className="lg:hidden flex items-center gap-3 mb-10">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 ring-2 ring-white">
+              <Stethoscope size={26} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">ClinicCare</h1>
-              <p className="text-sm text-slate-500">Quản lý phòng khám</p>
+              <h1 className="text-2xl font-bold text-slate-900">ClinicCare</h1>
+              <p className="text-xs text-sky-600 uppercase tracking-wider font-bold mt-0.5">Y tế cao cấp</p>
             </div>
           </div>
 
-          <div className="z-10">
-            <p className="text-sm font-bold text-sky-600 uppercase tracking-wider">Chào mừng trở lại</p>
-            <h2 className="mt-2 text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="z-10 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
               Đăng nhập hệ thống
             </h2>
-            <p className="mt-3 text-slate-500 font-medium">
-              Nhập tài khoản để truy cập giao diện theo vai trò.
+            <p className="mt-2 text-slate-500 font-medium">
+              Vui lòng nhập thông tin tài khoản của bạn.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5 z-10">
-            <div>
-              <label className="text-sm font-semibold text-slate-700">
+          <form onSubmit={handleSubmit} className="mt-10 space-y-6 z-10 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+            <div className="group">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block group-focus-within:text-sky-600 transition-colors">
                 Tên đăng nhập
               </label>
-              <div className="mt-2 relative">
-                <User className="absolute left-4 top-3.5 text-slate-400" size={20} />
+              <div className="relative">
+                <User className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-sky-500 transition-colors" size={20} />
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-sm pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-sky-500 transition shadow-sm hover:border-sky-300 focus:border-sky-500"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 pl-12 pr-4 py-3.5 outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all shadow-sm placeholder-slate-400 hover:bg-white"
                   placeholder="Nhập tên đăng nhập..."
                 />
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-semibold text-slate-700">
+            <div className="group">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block group-focus-within:text-sky-600 transition-colors">
                 Mật khẩu
               </label>
-              <div className="mt-2 relative">
-                <Lock className="absolute left-4 top-3.5 text-slate-400" size={20} />
+              <div className="relative">
+                <Lock className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-sky-500 transition-colors" size={20} />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-sm pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-sky-500 transition shadow-sm hover:border-sky-300 focus:border-sky-500"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 pl-12 pr-4 py-3.5 outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all shadow-sm placeholder-slate-400 hover:bg-white"
                   placeholder="Nhập mật khẩu..."
                 />
               </div>
             </div>
 
             {error && (
-              <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600 animate-in fade-in slide-in-from-top-2">
+              <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600 animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                 {error}
               </div>
             )}
@@ -173,27 +165,32 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 disabled:opacity-60 text-white font-bold py-3.5 shadow-lg shadow-sky-200 transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 text-white font-bold py-4 shadow-[0_8px_20px_rgba(14,165,233,0.2)] transition-all duration-300 hover:shadow-[0_8px_25px_rgba(14,165,233,0.3)] hover:-translate-y-0.5 active:translate-y-0"
             >
-              {loading ? "Đang đăng nhập..." : "Đăng nhập an toàn"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                  Đang xác thực...
+                </span>
+              ) : "Đăng nhập an toàn"}
             </button>
           </form>
 
-          <div className="mt-8 z-10">
-            <div className="flex items-center gap-4 mb-5">
+          <div className="mt-10 z-10 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex items-center gap-4 mb-6 opacity-60">
               <div className="h-px bg-slate-200 flex-1"></div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đăng nhập nhanh (Demo)</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tài khoản trải nghiệm</p>
               <div className="h-px bg-slate-200 flex-1"></div>
             </div>
             
             <div className="grid grid-cols-3 gap-3">
               {[
-                { role: "Quản trị", user: "admin", color: "bg-slate-100/80 hover:bg-slate-100 text-slate-800" },
-                { role: "Lễ tân", user: "letan", color: "bg-blue-100/70 hover:bg-blue-100 text-blue-800" },
-                { role: "Bác sĩ", user: "bacsi", color: "bg-emerald-100/70 hover:bg-emerald-100 text-emerald-800" },
-                { role: "Dược sĩ", user: "duocsi", color: "bg-purple-100/70 hover:bg-purple-100 text-purple-800" },
-                { role: "Thu ngân", user: "thungan", color: "bg-orange-100/70 hover:bg-orange-100 text-orange-800" },
-                { role: "Quản lý", user: "quanly", color: "bg-rose-100/70 hover:bg-rose-100 text-rose-800" }
+                { role: "Quản trị", user: "admin", color: "hover:border-sky-300 hover:bg-sky-50 text-sky-700 bg-white" },
+                { role: "Lễ tân", user: "letan", color: "hover:border-blue-300 hover:bg-blue-50 text-blue-700 bg-white" },
+                { role: "Bác sĩ", user: "bacsi", color: "hover:border-emerald-300 hover:bg-emerald-50 text-emerald-700 bg-white" },
+                { role: "Dược sĩ", user: "duocsi", color: "hover:border-purple-300 hover:bg-purple-50 text-purple-700 bg-white" },
+                { role: "Thu ngân", user: "thungan", color: "hover:border-orange-300 hover:bg-orange-50 text-orange-700 bg-white" },
+                { role: "Quản lý", user: "quanly", color: "hover:border-rose-300 hover:bg-rose-50 text-rose-700 bg-white" }
               ].map(btn => (
                 <button
                   key={btn.role}
@@ -203,26 +200,14 @@ export default function LoginPage() {
                     setPassword("demo_hash_123");
                     setError("");
                   }}
-                  className={`px-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex flex-col items-center justify-center gap-1 border border-white/40 shadow-sm backdrop-blur-md hover:-translate-y-1 hover:shadow-lg ${btn.color}`}
+                  className={`px-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex flex-col items-center justify-center gap-1.5 border border-slate-200 shadow-sm hover:-translate-y-1 hover:shadow-md ${btn.color}`}
                 >
-                  <span className="opacity-80 text-[11px] uppercase tracking-wide font-bold">{btn.role}</span>
-                  <span className="font-bold text-[13px]">{btn.user}</span>
+                  <span className="opacity-80 text-[10px] uppercase tracking-widest font-bold">{btn.role}</span>
+                  <span className="font-extrabold text-xs">{btn.user}</span>
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Mini info strip at bottom */}
-          <div className="mt-auto pt-8 z-10 flex items-center justify-center gap-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-            <span>Đa vai trò</span>
-            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-            <span>Database First</span>
-            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-            <span>SQL Server</span>
-            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-            <span>Audit Logs</span>
-          </div>
-
         </div>
       </div>
     </div>
