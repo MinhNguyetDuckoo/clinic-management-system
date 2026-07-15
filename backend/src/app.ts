@@ -15,6 +15,7 @@ import doctorRoutes from "./modules/doctors/doctors.routes";
 import roomRoutes from "./modules/rooms/rooms.routes";
 import adminRoutes from "./modules/admin/admin.routes";
 import doctorScheduleRoutes from "./modules/doctor-schedules/doctorSchedules.routes";
+import demoRoutes from "./modules/demo/demo.routes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -51,5 +52,6 @@ app.use("/api/doctors", doctorRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/doctor-schedules", doctorScheduleRoutes);
+app.use("/api/demo", demoRoutes);
 app.use(errorMiddleware);
 export default app;

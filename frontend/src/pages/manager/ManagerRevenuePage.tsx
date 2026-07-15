@@ -37,6 +37,31 @@ export default function ManagerRevenuePage() {
     }
   }
 
+  async function loadDataDirty() {
+    try {
+      setLoading(true);
+      // ONLY fetch dirty revenue, do NOT fetch dashboard-summary because it doesn't have READ UNCOMMITTED and will block
+      const revRes = await axiosClient.get("/reports/revenue-dirty");
+
+      if (revRes.data.success) {
+        const revData = revRes.data.data || [];
+        setRevenues(revData);
+        // Update todayRevenue manually from dirty read data so the card also updates
+        const todayStr = new Date().toISOString().split("T")[0];
+        const todayRow = revData.find((r: any) => r.RevenueDate && r.RevenueDate.startsWith(todayStr));
+        if (todayRow) {
+          setSummary((prev: any) => ({ ...prev, todayRevenue: todayRow.TotalRevenue }));
+        }
+      }
+      alert("Đã tải báo cáo với READ UNCOMMITTED (Dirty Read)");
+    } catch (error: any) {
+      console.error(error);
+      alert("Lỗi khi tải dữ liệu doanh thu (Dirty Read)");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadData();
   }, []);
@@ -55,13 +80,22 @@ export default function ManagerRevenuePage() {
             Chi tiết doanh thu và trạng thái thanh toán hóa đơn
           </p>
         </div>
-        <button
-          onClick={loadData}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-50 text-blue-700 font-medium rounded-xl hover:bg-blue-100 disabled:opacity-50"
-        >
-          {loading ? "Đang tải..." : "Làm mới dữ liệu"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={loadDataDirty}
+            disabled={loading}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 font-medium"
+          >
+            Tải báo cáo (Dirty Read)
+          </button>
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+          >
+            Làm mới
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}

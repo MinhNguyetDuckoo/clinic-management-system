@@ -43,8 +43,22 @@ router.post(
 router.patch(
   "/:id/status",
   authMiddleware,
-  roleMiddleware(["Admin", "Manager"]),
+  roleMiddleware(["Admin", "Manager", "Pharmacist"]),
   medicineController.updateMedicineStatus
+);
+
+router.post(
+  "/demo/swap-stock",
+  authMiddleware,
+  roleMiddleware(["Admin", "Manager", "Pharmacist"]),
+  medicineController.swapMedicineStock
+);
+
+router.post(
+  "/demo/swap-stock-fixed",
+  authMiddleware,
+  roleMiddleware(["Admin", "Manager", "Pharmacist"]),
+  medicineController.swapMedicineStockFixed
 );
 
 export default router;

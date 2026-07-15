@@ -40,3 +40,19 @@ export async function getMedicineStockStatus() {
 
   return result.recordset;
 }
+
+export async function getRevenueByDayDirty() {
+  const pool = await getDbPool();
+
+  const result = await pool.request().query(`
+    SELECT 
+      CAST(p.PaidAt AS DATE) AS RevenueDate,
+      COUNT(DISTINCT p.InvoiceId) AS TotalPaidInvoices,
+      SUM(p.Amount) AS TotalRevenue
+    FROM Payments p WITH (NOLOCK)
+    GROUP BY CAST(p.PaidAt AS DATE)
+    ORDER BY RevenueDate DESC
+  `);
+
+  return result.recordset;
+}

@@ -145,3 +145,11 @@ export async function cancelAppointment(
     body.cancelReason ?? null
   );
 }
+
+export async function countAppointmentsPhantom(date: string) {
+  return await appointmentRepo.countAppointmentsPhantom(date);
+}
+
+export async function createAppointmentFast(date: string) {
+  return await appointmentRepo.createAppointmentFast(date);
+}

@@ -88,3 +88,39 @@ export async function cancelInvoice(req: Request, res: Response) {
     res.status(400).json({ success: false, message: error.message });
   }
 }
+
+export async function payInvoiceError(req: Request, res: Response) {
+  try {
+    const invoiceId = Number(req.params.id);
+    const { amount, paymentMethod, note } = req.body;
+    const paidBy = (req as any).user?.userId || 5;
+
+    const data = await invoiceService.payInvoiceError(
+      invoiceId,
+      amount,
+      paymentMethod,
+      paidBy,
+      note
+    );
+
+    return res.json({
+      success: true,
+      message: "Thanh toán thành công.",
+      data
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Thanh toán thất bại."
+    });
+  }
+}
+
+export async function createSampleInvoice(req: Request, res: Response) {
+  try {
+    const data = await invoiceService.createSampleInvoice();
+    res.json({ success: true, data, message: "Tạo hóa đơn mẫu thành công" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}

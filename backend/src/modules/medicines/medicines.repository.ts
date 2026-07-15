@@ -126,3 +126,78 @@ export async function updateMedicineStatus(medicineId: number, isActive: boolean
 
   return result.recordset[0] || null;
 }
+
+export async function swapMedicineStock(medAId: number, medBId: number) {
+  const pool = await getDbPool();
+  // Sử dụng Transaction SERIALIZABLE để dễ dàng tạo Deadlock
+  const transaction = new sql.Transaction(pool);
+  await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
+
+  try {
+    // 1. Lock Thuốc A
+    await transaction.request()
+      .input("MedA", sql.Int, medAId)
+      .query(`
+        UPDATE Medicines 
+        SET StockQuantity = StockQuantity + 1 
+        WHERE MedicineId = @MedA
+      `);
+
+    // 2. Chờ 5 giây để session kia kịp Lock Thuốc B
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // 3. Lock Thuốc B (sẽ bị block nếu session kia đã giữ Lock B)
+    await transaction.request()
+      .input("MedB", sql.Int, medBId)
+      .query(`
+        UPDATE Medicines 
+        SET StockQuantity = StockQuantity - 1 
+        WHERE MedicineId = @MedB
+      `);
+
+    await transaction.commit();
+    return { success: true };
+  } catch (err: any) {
+    await transaction.rollback();
+    throw err;
+  }
+}
+
+export async function swapMedicineStockFixed(medAId: number, medBId: number) {
+  const pool = await getDbPool();
+  const transaction = new sql.Transaction(pool);
+  await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
+
+  try {
+    // Giải pháp tránh Deadlock: Luôn luôn Lock theo thứ tự ID nhỏ trước, ID lớn sau
+    const firstLockId = Math.min(medAId, medBId);
+    const secondLockId = Math.max(medAId, medBId);
+
+    // 1. Lock thuốc có ID nhỏ hơn
+    await transaction.request()
+      .input("FirstLockId", sql.Int, firstLockId)
+      .query(`
+        UPDATE Medicines 
+        SET StockQuantity = StockQuantity + 1 
+        WHERE MedicineId = @FirstLockId
+      `);
+
+    // 2. Chờ 5 giây (để mô phỏng việc phiên khác có cơ hội chạy)
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // 3. Lock thuốc có ID lớn hơn
+    await transaction.request()
+      .input("SecondLockId", sql.Int, secondLockId)
+      .query(`
+        UPDATE Medicines 
+        SET StockQuantity = StockQuantity - 1 
+        WHERE MedicineId = @SecondLockId
+      `);
+
+    await transaction.commit();
+    return { success: true };
+  } catch (err: any) {
+    await transaction.rollback();
+    throw err;
+  }
+}

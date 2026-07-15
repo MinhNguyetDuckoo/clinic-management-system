@@ -79,3 +79,25 @@ export async function cancelAppointment(req: Request, res: Response) {
     });
   }
 }
+
+export async function countAppointmentsPhantom(req: Request, res: Response) {
+  try {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ success: false, message: "Thiếu ngày" });
+    const data = await appointmentService.countAppointmentsPhantom(String(date));
+    return res.json({ success: true, data });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+export async function createAppointmentFast(req: Request, res: Response) {
+  try {
+    const { date } = req.body;
+    if (!date) return res.status(400).json({ success: false, message: "Thiếu ngày" });
+    const data = await appointmentService.createAppointmentFast(String(date));
+    return res.json({ success: true, data, message: "Tạo lịch hẹn thành công (Nhanh)" });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}

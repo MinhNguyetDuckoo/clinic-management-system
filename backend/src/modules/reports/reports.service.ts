@@ -5,5 +5,9 @@ export async function getRevenueByDay() {
 }
 
 export async function getMedicineStockStatus() {
-  return reportRepo.getMedicineStockStatus();
+  return await reportRepo.getMedicineStockStatus();
+}
+
+export async function getRevenueByDayDirty() {
+  return await reportRepo.getRevenueByDayDirty();
 }

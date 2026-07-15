@@ -64,3 +64,29 @@ export async function cancelInvoice(invoiceId: number, reason: string, currentUs
   if (!invoiceId) throw new Error("Mã hóa đơn không hợp lệ");
   return invoiceRepo.cancelInvoice(invoiceId, currentUserId, reason || null);
 }
+
+
+
+export async function payInvoiceError(
+  invoiceId: number,
+  amount: number,
+  paymentMethod: string,
+  paidBy: number,
+  note?: string
+) {
+  if (!invoiceId || !amount || !paymentMethod || !paidBy) {
+    throw new Error("Thiếu thông tin bắt buộc.");
+  }
+
+  return await invoiceRepo.payInvoiceError({
+    invoiceId,
+    amount,
+    paymentMethod,
+    paidBy,
+    note
+  });
+}
+
+export async function createSampleInvoice() {
+  return await invoiceRepo.createSampleInvoice();
+}

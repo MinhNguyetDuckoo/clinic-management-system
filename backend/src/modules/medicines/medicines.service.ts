@@ -104,3 +104,21 @@ export async function updateMedicineStatus(medicineId: number, body: any) {
   if (!medicine) throw new AppError("Thuoc khong ton tai.", 404);
   return medicine;
 }
+
+export async function updateMedicineStatusRaw(medicineId: number, isActive: boolean) {
+  return await medicineRepo.updateMedicineStatus(medicineId, isActive);
+}
+
+export async function swapMedicineStock(medAId: number, medBId: number) {
+  if (!medAId || !medBId) {
+    throw new Error("Thiếu ID thuốc.");
+  }
+  return await medicineRepo.swapMedicineStock(medAId, medBId);
+}
+
+export async function swapMedicineStockFixed(medAId: number, medBId: number) {
+  if (!medAId || !medBId) {
+    throw new Error("Thiếu ID thuốc.");
+  }
+  return await medicineRepo.swapMedicineStockFixed(medAId, medBId);
+}

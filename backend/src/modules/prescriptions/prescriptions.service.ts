@@ -133,3 +133,37 @@ export async function getPrescriptionByExaminationId(examinationId: number) {
 
   return prescriptionRepo.getPrescriptionByExaminationId(examinationId);
 }
+
+export async function dispenseMedicineDelay(prescriptionId: number, currentUserId?: number) {
+  if (!prescriptionId) {
+    throw new Error("PrescriptionId không hợp lệ.");
+  }
+
+  if (!currentUserId) {
+    throw new Error("Không xác định được người cấp thuốc.");
+  }
+
+  return prescriptionRepo.dispenseMedicineDelay({
+    prescriptionId,
+    dispensedBy: currentUserId
+  });
+}
+
+export async function createSampleData() {
+  return prescriptionRepo.createSampleData();
+}
+
+export async function dispenseMedicineLostUpdate(prescriptionId: number, currentUserId?: number) {
+  if (!prescriptionId) {
+    throw new Error("PrescriptionId không hợp lệ.");
+  }
+
+  if (!currentUserId) {
+    throw new Error("Không xác định được người cấp thuốc.");
+  }
+
+  return prescriptionRepo.dispenseMedicineLostUpdate({
+    prescriptionId,
+    dispensedBy: currentUserId
+  });
+}

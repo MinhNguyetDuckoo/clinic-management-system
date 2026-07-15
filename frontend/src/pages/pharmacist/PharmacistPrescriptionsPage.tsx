@@ -98,6 +98,77 @@ export default function PharmacistPrescriptionsPage() {
     }
   }
 
+  async function handleDispenseDelay() {
+    if (!selectedPrescription) return;
+
+    const outOfStock = prescriptionDetails.find(d => !d.IsEnoughStock);
+    if (outOfStock) {
+      alert(`Thuốc "${outOfStock.MedicineName}" không đủ tồn kho (Yêu cầu: ${outOfStock.Quantity}, Tồn: ${outOfStock.StockQuantity})`);
+      return;
+    }
+
+    try {
+      setDispensing(true);
+      const response = await axiosClient.post(`/prescriptions/${selectedPrescription.PrescriptionId}/dispense-delay`);
+      
+      if (response.data.success) {
+        alert("Cấp thuốc thành công");
+        closeDetailsModal();
+        await loadPendingPrescriptions();
+      } else {
+        alert(response.data.message || "Không thể cấp thuốc");
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Lỗi cấp thuốc: Không đủ tồn kho hoặc thuốc ngưng hoạt động");
+    } finally {
+      setDispensing(false);
+    }
+  }
+
+  async function handleDispenseLostUpdate() {
+    if (!selectedPrescription) return;
+
+    const outOfStock = prescriptionDetails.find(d => !d.IsEnoughStock);
+    if (outOfStock) {
+      alert(`Thuốc "${outOfStock.MedicineName}" không đủ tồn kho (Yêu cầu: ${outOfStock.Quantity}, Tồn: ${outOfStock.StockQuantity})`);
+      return;
+    }
+
+    try {
+      setDispensing(true);
+      const response = await axiosClient.post(`/prescriptions/${selectedPrescription.PrescriptionId}/dispense-lost-update`);
+      
+      if (response.data.success) {
+        alert("Cấp thuốc thành công");
+        closeDetailsModal();
+        await loadPendingPrescriptions();
+      } else {
+        alert(response.data.message || "Không thể cấp thuốc");
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Lỗi cấp thuốc");
+    } finally {
+      setDispensing(false);
+    }
+  }
+
+  async function handleCreateSample() {
+    try {
+      const response = await axiosClient.post("/prescriptions/demo/create-sample");
+      if (response.data.success) {
+        alert("Đã tạo đơn thuốc mẫu");
+        loadPendingPrescriptions();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Lỗi khi tạo dữ liệu mẫu");
+    }
+  }
+
   useEffect(() => {
     loadPendingPrescriptions();
   }, []);
@@ -121,12 +192,20 @@ export default function PharmacistPrescriptionsPage() {
             <h2 className="font-semibold">Danh sách đơn thuốc</h2>
             <p className="text-sm text-gray-500">Tổng cộng {prescriptions.length} đơn</p>
           </div>
-          <button 
-            onClick={loadPendingPrescriptions}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 bg-blue-50 rounded-lg"
-          >
-            Làm mới
-          </button>
+          <div>
+            <button 
+              onClick={handleCreateSample}
+              className="text-sm text-green-600 hover:text-green-800 font-medium px-3 py-1 bg-green-50 rounded-lg mr-2"
+            >
+              Tạo đơn mẫu
+            </button>
+            <button 
+              onClick={loadPendingPrescriptions}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 bg-blue-50 rounded-lg"
+            >
+              Làm mới
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -251,6 +330,20 @@ export default function PharmacistPrescriptionsPage() {
                 className="px-5 py-2 rounded-xl border bg-white text-gray-700 hover:bg-gray-50 font-medium disabled:opacity-50"
               >
                 Đóng
+              </button>
+              <button
+                onClick={handleDispenseLostUpdate}
+                disabled={dispensing || detailsLoading || prescriptionDetails.length === 0}
+                className="px-5 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 font-medium disabled:opacity-50 flex items-center"
+              >
+                {dispensing ? "Đang xử lý..." : "Cấp thuốc (Lỗi Lost Update)"}
+              </button>
+              <button
+                onClick={handleDispenseDelay}
+                disabled={dispensing || detailsLoading || prescriptionDetails.length === 0}
+                className="px-5 py-2 rounded-xl bg-orange-500 text-white hover:bg-orange-600 font-medium disabled:opacity-50 flex items-center"
+              >
+                {dispensing ? "Đang xử lý..." : "Cấp thuốc (Delay 5s)"}
               </button>
               <button
                 onClick={handleDispense}

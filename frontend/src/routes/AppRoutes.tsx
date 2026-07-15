@@ -24,11 +24,13 @@ import DoctorSchedulesPage from "../pages/manager/DoctorSchedulesPage";
 import MedicineManagementPage from "../pages/manager/MedicineManagementPage";
 import PatientsPage from "../pages/receptionist/PatientsPage";
 import AppointmentsPage from "../pages/receptionist/AppointmentsPage";
+import DemoConcurrencyPage from "../pages/demo/DemoConcurrencyPage";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/demo" element={<DemoConcurrencyPage />} />
 
       <Route
         path="/admin"

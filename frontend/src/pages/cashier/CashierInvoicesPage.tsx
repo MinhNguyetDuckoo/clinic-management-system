@@ -155,6 +155,22 @@ export default function CashierInvoicesPage() {
     }
   }
 
+  async function handleCreateSampleInvoice() {
+    try {
+      setCreating(true);
+      const response = await axiosClient.post("/invoices/demo/create-sample");
+      if (response.data.success) {
+        alert("Đã tạo hóa đơn mẫu thành công");
+        setStatusFilter("Unpaid");
+        loadInvoices();
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Lỗi tạo hóa đơn mẫu");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   async function openDetailsModal(invoice: UnpaidInvoice) {
     setSelectedInvoice(invoice);
     setPayAmount(invoice.TotalAmount);
@@ -195,6 +211,37 @@ export default function CashierInvoicesPage() {
     try {
       setProcessing(true);
       const response = await axiosClient.post(`/invoices/${selectedInvoice.InvoiceId}/pay`, {
+        amount: payAmount,
+        paymentMethod,
+        note: payNote
+      });
+      if (response.data.success) {
+        alert("Thanh toán thành công");
+        closeDetailsModal();
+        loadInvoices();
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Lỗi thanh toán");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function handlePayInvoiceError() {
+    if (!selectedInvoice) return;
+    if (payAmount <= 0) {
+      alert("Số tiền thanh toán phải lớn hơn 0");
+      return;
+    }
+    if (payAmount !== selectedInvoice.TotalAmount) {
+      alert(`Số tiền thanh toán phải bằng tổng hóa đơn (${selectedInvoice.TotalAmount.toLocaleString()} VNĐ)`);
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      const response = await axiosClient.post(`/invoices/${selectedInvoice.InvoiceId}/pay-error`, {
         amount: payAmount,
         paymentMethod,
         note: payNote
@@ -358,13 +405,22 @@ export default function CashierInvoicesPage() {
             className="w-64 px-4 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button
-          onClick={handleCreateInvoice}
-          disabled={creating}
-          className="px-5 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50"
-        >
-          {creating ? "Đang tạo..." : "Tạo hóa đơn"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCreateSampleInvoice}
+            disabled={creating}
+            className="px-5 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50"
+          >
+            Tạo HĐ mẫu
+          </button>
+          <button
+            onClick={handleCreateInvoice}
+            disabled={creating}
+            className="px-5 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {creating ? "Đang tạo..." : "Tạo hóa đơn"}
+          </button>
+        </div>
       </div>
 
       {/* Danh sách hóa đơn */}
@@ -618,9 +674,16 @@ export default function CashierInvoicesPage() {
                   </div>
 
                   <button
+                    onClick={handlePayInvoiceError}
+                    disabled={processing || detailsLoading}
+                    className="w-full py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50 mt-2"
+                  >
+                    Thanh toán (Lỗi Delay)
+                  </button>
+                  <button
                     onClick={handlePayInvoice}
                     disabled={processing || detailsLoading}
-                    className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+                    className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 mt-2"
                   >
                     Xác nhận Thanh toán
                   </button>

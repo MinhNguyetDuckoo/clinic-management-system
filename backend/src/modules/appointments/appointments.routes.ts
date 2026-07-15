@@ -5,6 +5,18 @@ import { roleMiddleware } from "../../middlewares/role.middleware";
 
 const router = Router();
 
+router.post(
+  "/demo/phantom-create",
+  authMiddleware,
+  appointmentController.createAppointmentFast
+);
+
+router.get(
+  "/demo/phantom-count",
+  authMiddleware,
+  appointmentController.countAppointmentsPhantom
+);
+
 router.get(
   "/",
   authMiddleware,

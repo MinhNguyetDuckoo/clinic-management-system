@@ -249,6 +249,44 @@ export default function MedicineManagementPage() {
     }
   }
 
+  async function handleSwapDeadlock(reverse = false) {
+    if (medicines.length < 2) return alert("Cần ít nhất 2 thuốc để test.");
+    const medA = medicines[0].MedicineId;
+    const medB = medicines[1].MedicineId;
+    
+    const body = reverse ? { medAId: medB, medBId: medA } : { medAId: medA, medBId: medB };
+    
+    try {
+      setLoading(true);
+      const res = await axiosClient.post("/medicines/demo/swap-stock", body);
+      alert(res.data.message);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Lỗi (Deadlock)");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSwapFixed(reverse = false) {
+    if (medicines.length < 2) return alert("Cần ít nhất 2 thuốc để test.");
+    const medA = medicines[0].MedicineId;
+    const medB = medicines[1].MedicineId;
+    
+    const body = reverse ? { medAId: medB, medBId: medA } : { medAId: medA, medBId: medB };
+    
+    try {
+      setLoading(true);
+      const res = await axiosClient.post("/medicines/demo/swap-stock-fixed", body);
+      alert(res.data.message);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Lỗi khi hoán đổi");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -257,21 +295,51 @@ export default function MedicineManagementPage() {
           <p className="mt-2 text-slate-500">Cap nhat thong tin thuoc va ton kho co ghi nhan giao dich.</p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2 flex-wrap max-w-lg justify-end">
+          <button
+            onClick={() => handleSwapDeadlock(false)}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-3 py-2 font-semibold text-white hover:bg-orange-600 disabled:opacity-60 text-sm"
+          >
+            Đổi Thuốc 1-2 (Lỗi DL)
+          </button>
+          <button
+            onClick={() => handleSwapDeadlock(true)}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-3 py-2 font-semibold text-white hover:bg-orange-600 disabled:opacity-60 text-sm"
+          >
+            Đổi Thuốc 2-1 (Lỗi DL)
+          </button>
+          
+          <button
+            onClick={() => handleSwapFixed(false)}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-green-500 px-3 py-2 font-semibold text-white hover:bg-green-600 disabled:opacity-60 text-sm"
+          >
+            Đổi Thuốc 1-2 (Fix DL)
+          </button>
+          <button
+            onClick={() => handleSwapFixed(true)}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-green-500 px-3 py-2 font-semibold text-white hover:bg-green-600 disabled:opacity-60 text-sm"
+          >
+            Đổi Thuốc 2-1 (Fix DL)
+          </button>
+
           <button
             onClick={loadData}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-3 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-60 text-sm"
           >
-            <RefreshCcw size={18} />
-            Lam moi
+            <RefreshCcw size={16} />
+            Làm mới
           </button>
           <button
             onClick={openCreateForm}
-            className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white hover:bg-sky-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 font-semibold text-white hover:bg-sky-700 text-sm"
           >
-            <Plus size={18} />
-            Them thuoc
+            <Plus size={16} />
+            Thêm thuốc
           </button>
         </div>
       </div>

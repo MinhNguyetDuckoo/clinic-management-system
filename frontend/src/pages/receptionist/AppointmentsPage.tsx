@@ -259,6 +259,33 @@ export default function AppointmentsPage() {
     }
   }
 
+  async function handlePhantomCount() {
+    setLoading(true);
+    try {
+      const response = await axiosClient.get("/appointments/demo/phantom-count", {
+        params: { date }
+      });
+      const data = response.data.data;
+      alert(`Đã đếm xong!\n\nLần đọc 1: ${data.count1} lịch hẹn\nLần đọc 2: ${data.count2} lịch hẹn\n\n${data.count1 !== data.count2 ? "PHANTOM READ XẢY RA!" : "Không có thay đổi."}`);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Lỗi báo cáo");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handlePhantomCreate() {
+    try {
+      const response = await axiosClient.post("/appointments/demo/phantom-create", { date });
+      if (response.data.success) {
+        alert("Đã tạo 1 lịch hẹn ngẫu nhiên siêu tốc!");
+        fetchAppointments(date);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Lỗi tạo lịch hẹn");
+    }
+  }
+
   async function searchPatients(keyword = patientKeyword) {
     setPatientLoading(true);
     setFormError("");
@@ -748,13 +775,29 @@ export default function AppointmentsPage() {
           </p>
         </div>
 
-        <button
-          onClick={openCreateForm}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-5 py-3 text-white font-semibold shadow-lg shadow-sky-100 hover:bg-sky-700 transition"
-        >
-          <Plus size={20} />
-          Tạo lịch hẹn
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handlePhantomCount}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-white font-semibold shadow-lg shadow-orange-100 hover:bg-orange-600 transition disabled:opacity-50"
+          >
+            Báo cáo SL (Lỗi Phantom)
+          </button>
+          <button
+            onClick={handlePhantomCreate}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-500 px-5 py-3 text-white font-semibold shadow-lg shadow-green-100 hover:bg-green-600 transition disabled:opacity-50"
+          >
+            Tạo nhanh 1 lịch
+          </button>
+          <button
+            onClick={openCreateForm}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-5 py-3 text-white font-semibold shadow-lg shadow-sky-100 hover:bg-sky-700 transition"
+          >
+            <Plus size={20} />
+            Tạo lịch hẹn
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">

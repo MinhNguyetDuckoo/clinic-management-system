@@ -211,3 +211,171 @@ export async function dispenseMedicine(input: {
     medicines: recordsets[1] || []
   };
 }
+
+export async function dispenseMedicineDelay(input: {
+  prescriptionId: number;
+  dispensedBy: number;
+}) {
+  const pool = await getDbPool();
+  // 1. Tạo Transaction để đảm bảo tính Toàn vẹn (Atomicity), chống Partial Update
+  const transaction = new sql.Transaction(pool);
+  
+  await transaction.begin();
+
+  try {
+    const detailsReq = new sql.Request(transaction);
+    detailsReq.input("PrescriptionId", sql.Int, input.prescriptionId);
+    const detailsResult = await detailsReq.query(`
+      SELECT MedicineId, Quantity
+      FROM PrescriptionDetails
+      WHERE PrescriptionId = @PrescriptionId
+    `);
+
+    for (const item of detailsResult.recordset) {
+      const stockReq = new sql.Request(transaction);
+      stockReq.input("MedicineId", sql.Int, item.MedicineId);
+      
+      // 2. Thêm WITH (UPDLOCK, HOLDLOCK) để chống Lost Update
+      const stockResult = await stockReq.query(`
+        SELECT StockQuantity 
+        FROM Medicines WITH (UPDLOCK, HOLDLOCK) 
+        WHERE MedicineId = @MedicineId
+      `);
+      
+      if (stockResult.recordset.length > 0) {
+        const currentStock = stockResult.recordset[0].StockQuantity;
+
+        // Giảm thời gian chờ xuống 5s. Đơn 2 thuốc mất 10s sẽ không bị trình duyệt văng lỗi Timeout 15s
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        const updateReq = new sql.Request(transaction);
+        updateReq.input("MedicineId", sql.Int, item.MedicineId);
+        updateReq.input("NewStock", sql.Int, currentStock - item.Quantity);
+        await updateReq.query(`
+          UPDATE Medicines
+          SET StockQuantity = @NewStock
+          WHERE MedicineId = @MedicineId
+        `);
+      }
+    }
+
+    const presReq = new sql.Request(transaction);
+    presReq.input("PrescriptionId", sql.Int, input.prescriptionId);
+    presReq.input("DispensedBy", sql.Int, input.dispensedBy);
+    await presReq.query(`
+      UPDATE Prescriptions
+      SET Status = 'Dispensed',
+          DispensedBy = @DispensedBy,
+          DispensedAt = SYSDATETIME()
+      WHERE PrescriptionId = @PrescriptionId
+    `);
+
+    await transaction.commit();
+    return getPrescriptionDetail(input.prescriptionId);
+
+  } catch (error) {
+    // Nếu có lỗi giữa chừng (ví dụ Timeout), toàn bộ tiến trình sẽ tự hoàn tác
+    await transaction.rollback();
+    throw error;
+  }
+}
+
+export async function createSampleData() {
+  const pool = await getDbPool();
+  const exResult = await pool.request().query(`
+    SELECT TOP 1 e.ExaminationId, e.DoctorId 
+    FROM Examinations e 
+    WHERE e.Status = 'Completed'
+  `);
+  
+  if (exResult.recordset.length === 0) {
+    throw new Error("Không có phiếu khám nào hoàn thành để tạo đơn thuốc mẫu.");
+  }
+  
+  const examId = exResult.recordset[0].ExaminationId;
+  const doctorId = exResult.recordset[0].DoctorId;
+
+  const medResult = await pool.request().query(`
+    SELECT TOP 2 MedicineId 
+    FROM Medicines 
+    WHERE IsActive = 1 AND IsDeleted = 0
+  `);
+  
+  if (medResult.recordset.length === 0) {
+    throw new Error("Không có thuốc nào trong hệ thống.");
+  }
+
+  const pResult = await pool.request()
+    .input("ExaminationId", sql.Int, examId)
+    .input("DoctorId", sql.Int, doctorId)
+    .query(`
+      INSERT INTO Prescriptions (ExaminationId, DoctorId, Status, Note, CreatedAt)
+      OUTPUT INSERTED.PrescriptionId
+      VALUES (@ExaminationId, @DoctorId, 'Pending', N'Đơn thuốc mẫu để test', SYSDATETIME())
+    `);
+    
+  const newPrescriptionId = pResult.recordset[0].PrescriptionId;
+
+  for (const med of medResult.recordset) {
+    await pool.request()
+      .input("PrescriptionId", sql.Int, newPrescriptionId)
+      .input("MedicineId", sql.Int, med.MedicineId)
+      .query(`
+        INSERT INTO PrescriptionDetails (PrescriptionId, MedicineId, Quantity, Dosage, UsageInstruction)
+        VALUES (@PrescriptionId, @MedicineId, 20, N'Ngày 2 lần', N'Uống sau ăn')
+      `);
+  }
+
+  return { prescriptionId: newPrescriptionId };
+}
+
+export async function dispenseMedicineLostUpdate(input: {
+  prescriptionId: number;
+  dispensedBy: number;
+}) {
+  const pool = await getDbPool();
+
+  const detailsResult = await pool.request()
+    .input("PrescriptionId", sql.Int, input.prescriptionId)
+    .query(`
+      SELECT MedicineId, Quantity
+      FROM PrescriptionDetails
+      WHERE PrescriptionId = @PrescriptionId
+    `);
+
+  // Không dùng Transaction, không dùng khóa (UPDLOCK) để tạo kịch bản Lost Update
+  for (const item of detailsResult.recordset) {
+    const stockResult = await pool.request()
+      .input("MedicineId", sql.Int, item.MedicineId)
+      .query(`SELECT StockQuantity FROM Medicines WHERE MedicineId = @MedicineId`);
+    
+    if (stockResult.recordset.length > 0) {
+      const currentStock = stockResult.recordset[0].StockQuantity;
+
+      // Cố tình delay 5s để dễ thao tác song song từ 2 tab
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      await pool.request()
+        .input("MedicineId", sql.Int, item.MedicineId)
+        .input("NewStock", sql.Int, currentStock - item.Quantity)
+        .query(`
+          UPDATE Medicines
+          SET StockQuantity = @NewStock
+          WHERE MedicineId = @MedicineId
+        `);
+    }
+  }
+
+  await pool.request()
+    .input("PrescriptionId", sql.Int, input.prescriptionId)
+    .input("DispensedBy", sql.Int, input.dispensedBy)
+    .query(`
+      UPDATE Prescriptions
+      SET Status = 'Dispensed',
+          DispensedBy = @DispensedBy,
+          DispensedAt = SYSDATETIME()
+      WHERE PrescriptionId = @PrescriptionId
+    `);
+
+  return getPrescriptionDetail(input.prescriptionId);
+}

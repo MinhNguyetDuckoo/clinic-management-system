@@ -26,6 +26,12 @@ router.delete(
   prescriptionController.deletePrescriptionDetail
 );
 
+router.post(
+  "/demo/create-sample",
+  authMiddleware,
+  prescriptionController.createSampleData
+);
+
 router.get(
   "/pending",
   authMiddleware,
@@ -52,6 +58,20 @@ router.post(
   authMiddleware,
   roleMiddleware(["Admin", "Pharmacist"]),
   prescriptionController.dispenseMedicine
+);
+
+router.post(
+  "/:id/dispense-delay",
+  authMiddleware,
+  roleMiddleware(["Admin", "Pharmacist"]),
+  prescriptionController.dispenseMedicineDelay
+);
+
+router.post(
+  "/:id/dispense-lost-update",
+  authMiddleware,
+  roleMiddleware(["Admin", "Pharmacist"]),
+  prescriptionController.dispenseMedicineLostUpdate
 );
 
 export default router;

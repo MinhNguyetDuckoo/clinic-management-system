@@ -138,3 +138,58 @@ export async function getPrescriptionByExaminationId(req: Request, res: Response
     });
   }
 }
+
+export async function dispenseMedicineDelay(req: Request, res: Response) {
+  try {
+    const prescriptionId = Number(req.params.id);
+    const currentUserId = (req as any).user?.userId;
+
+    const data = await prescriptionService.dispenseMedicineDelay(
+      prescriptionId,
+      currentUserId
+    );
+
+    return res.json({
+      success: true,
+      message: "Cấp thuốc thành công.",
+      data
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Cấp thuốc thất bại."
+    });
+  }
+}
+
+export async function createSampleData(req: Request, res: Response) {
+  try {
+    const data = await prescriptionService.createSampleData();
+    return res.json({ success: true, data, message: "Tạo dữ liệu mẫu thành công." });
+  } catch (error: any) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+export async function dispenseMedicineLostUpdate(req: Request, res: Response) {
+  try {
+    const prescriptionId = Number(req.params.id);
+    const currentUserId = (req as any).user?.userId;
+
+    const data = await prescriptionService.dispenseMedicineLostUpdate(
+      prescriptionId,
+      currentUserId
+    );
+
+    return res.json({
+      success: true,
+      message: "Cấp thuốc (Lost Update demo) thành công.",
+      data
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Cấp thuốc thất bại."
+    });
+  }
+}

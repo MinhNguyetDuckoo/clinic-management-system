@@ -13,6 +13,13 @@ router.get(
 );
 
 router.get(
+  "/revenue-dirty",
+  authMiddleware,
+  roleMiddleware(["Admin", "Manager"]),
+  reportController.getRevenueByDayDirty
+);
+
+router.get(
   "/medicine-stock",
   authMiddleware,
   roleMiddleware(["Admin", "Manager", "Pharmacist"]),

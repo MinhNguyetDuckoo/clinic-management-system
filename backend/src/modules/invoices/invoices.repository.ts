@@ -151,3 +151,67 @@ export async function cancelInvoice(invoiceId: number, cancelledBy: number | nul
   const result = await request.execute("sp_CancelInvoice");
   return result.recordset[0];
 }
+
+export async function payInvoiceError(input: {
+  invoiceId: number;
+  amount: number;
+  paymentMethod: string;
+  paidBy: number;
+  note?: string;
+}) {
+  const pool = await getDbPool();
+  const transaction = new sql.Transaction(pool);
+  await transaction.begin();
+
+  try {
+    await transaction.request()
+      .input("InvoiceId", sql.Int, input.invoiceId)
+      .query(`
+        UPDATE Invoices 
+        SET Status = 'Paid' 
+        WHERE InvoiceId = @InvoiceId
+      `);
+
+    await transaction.request()
+      .input("InvoiceId", sql.Int, input.invoiceId)
+      .input("Amount", sql.Decimal(18, 2), input.amount)
+      .input("PaymentMethod", sql.NVarChar(50), input.paymentMethod)
+      .input("PaidBy", sql.Int, input.paidBy)
+      .input("Note", sql.NVarChar(255), input.note || null)
+      .query(`
+        INSERT INTO Payments (InvoiceId, Amount, PaymentMethod, PaidBy, Note, PaidAt)
+        VALUES (@InvoiceId, @Amount, @PaymentMethod, @PaidBy, @Note, SYSDATETIME())
+      `);
+
+    await new Promise(resolve => setTimeout(resolve, 10000));
+
+    throw new Error("Giao dịch thanh toán gặp sự cố mạng (Rollback).");
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+}
+
+export async function createSampleInvoice() {
+  const pool = await getDbPool();
+
+  const result = await pool.request().query(`
+    DECLARE @PatientId INT = (SELECT TOP 1 PatientId FROM Patients WHERE IsDeleted = 0 ORDER BY NEWID());
+    DECLARE @CreatedBy INT = 5; 
+    
+    INSERT INTO Invoices (PatientId, ExaminationId, TotalAmount, Status, CreatedBy, CreatedAt)
+    OUTPUT INSERTED.InvoiceId
+    VALUES (@PatientId, NULL, 500000, 'Unpaid', @CreatedBy, SYSDATETIME());
+    
+    DECLARE @NewInvoiceId INT = (SELECT TOP 1 InvoiceId FROM Invoices ORDER BY InvoiceId DESC);
+    
+    INSERT INTO InvoiceDetails (InvoiceId, ItemType, ItemId, Description, Quantity, UnitPrice)
+    VALUES 
+      (@NewInvoiceId, 'Service', 1, N'Khám bệnh chuyên khoa', 1, 200000),
+      (@NewInvoiceId, 'Medicine', 1, N'Thuốc mẫu', 5, 60000);
+      
+    SELECT @NewInvoiceId as InvoiceId;
+  `);
+
+  return result.recordset?.[0] || null;
+}

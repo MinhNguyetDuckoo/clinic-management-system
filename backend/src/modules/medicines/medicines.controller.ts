@@ -62,3 +62,34 @@ export async function updateMedicineStatus(
     return next(error);
   }
 }
+
+export async function updateMedicineStatus(req: Request, res: Response) {
+  try {
+    const medicineId = Number(req.params.id);
+    const { isActive } = req.body;
+    const data = await medicineService.updateMedicineStatus(medicineId, isActive);
+    res.json({ success: true, data, message: "Cập nhật trạng thái thành công" });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+export async function swapMedicineStock(req: Request, res: Response) {
+  try {
+    const { medAId, medBId } = req.body;
+    const data = await medicineService.swapMedicineStock(Number(medAId), Number(medBId));
+    res.json({ success: true, data, message: "Hoán đổi thành công (Không bị deadlock)" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Lỗi khi hoán đổi (Deadlock)" });
+  }
+}
+
+export async function swapMedicineStockFixed(req: Request, res: Response) {
+  try {
+    const { medAId, medBId } = req.body;
+    const data = await medicineService.swapMedicineStockFixed(Number(medAId), Number(medBId));
+    res.json({ success: true, data, message: "Hoán đổi thành công (Đã Fixed Deadlock)" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Lỗi khi hoán đổi" });
+  }
+}
